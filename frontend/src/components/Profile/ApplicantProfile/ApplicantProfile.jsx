@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
-import ApplicantInfo from './ApplicantInfo';
+import ProfileInfo from '../ProfileInfo';
 import useFetch from '../../../Hooks/useFetch';
 import { PATCH_PROFILE } from '../../../APIs/APIs';
 import ApplicantExperiences from './ApplicantExperiences';
-
-const currencyFormat = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-});
-
-const linkFormat = (v) => (
-  <a href={v} target="blank">
-    {v}
-  </a>
-);
+import ApplicantSkills from './ApplicantSkills';
+import ApplicantCourses from './ApplicantCourses';
+import { currencyFormatter, linkFormatter } from '../../../utils/formatters';
 
 const ApplicantProfile = ({ data, canEdit, profileId }) => {
   const { request } = useFetch();
@@ -24,35 +16,35 @@ const ApplicantProfile = ({ data, canEdit, profileId }) => {
   const [workExperiences, setWorkExperiences] = useState([]);
 
   const handleSubmit = (body) => {
-    const { url, options } = PATCH_PROFILE('applicant', profileId, body);
+    const { url, options } = PATCH_PROFILE("applicant", profileId, body);
     return request(url, options);
   };
 
   useEffect(() => {
     setInfo({
-      about: { text: 'Sobre', value: data.about, type: 'textarea' },
-      location: { text: 'Cidade onde mora', value: data.location },
+      about: { text: "Sobre", value: data.about, type: "textarea" },
+      location: { text: "Cidade onde mora", value: data.location },
       locationWanted: {
-        text: 'Disposta a trabalhar em',
+        text: "Disposta a trabalhar em",
         value: data.locationWanted,
       },
       desiredSalary: {
-        text: 'Salário desejado',
+        text: "Salário desejado",
         value: data.desiredSalary,
-        type: 'number',
-        formatter: (v) => currencyFormat.format(v),
+        type: "number",
+        formatter: currencyFormatter,
       },
       github: {
-        text: 'Github',
+        text: "Github",
         value: data.github,
-        formatter: linkFormat,
-        placeholder: 'https://github.com/usuaria',
+        formatter: linkFormatter,
+        placeholder: "https://github.com/usuaria",
       },
       linkedin: {
-        text: 'LinkedIn',
+        text: "LinkedIn",
         value: data.linkedin,
-        formatter: linkFormat,
-        placeholder: 'https://linkedin.com/in/usuaria',
+        formatter: linkFormatter,
+        placeholder: "https://linkedin.com/in/usuaria",
       },
     });
     setSkills(data.skills || []);
@@ -62,15 +54,27 @@ const ApplicantProfile = ({ data, canEdit, profileId }) => {
 
   return (
     <div>
-      <ApplicantInfo
+      <ProfileInfo
         data={info}
         setData={setInfo}
+        canEdit={canEdit}
+        handleSubmit={handleSubmit}
+      />
+      <ApplicantSkills
+        data={skills}
+        setData={setSkills}
         canEdit={canEdit}
         handleSubmit={handleSubmit}
       />
       <ApplicantExperiences
         data={workExperiences}
         setData={setWorkExperiences}
+        canEdit={canEdit}
+        handleSubmit={handleSubmit}
+      />
+      <ApplicantCourses
+        data={courses}
+        setData={setCourses}
         canEdit={canEdit}
         handleSubmit={handleSubmit}
       />

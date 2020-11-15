@@ -1,106 +1,145 @@
-import React, {useState} from "react";
-import { Container, CardDeck, Card, Button, Pagination } from "react-bootstrap";
-import Main from "../Template/main/Main";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  CardDeck,
+  Card,
+  Button,
+  Spinner,
+  Form,
+  FormControl,
+} from "react-bootstrap";
+import useFetch from "../../Hooks/useFetch";
+import PaginationPage from "../Pagination/Pagination";
+import { GET_LIST_OPPORTUNITY } from "../../APIs/APIs";
 import { Link } from "react-router-dom";
 
 import "./ListOpportunity.css";
+import { currencyFormatter } from "../../utils/formatters";
+import { skillMap } from "../../utils/skills";
+import { ALL_OPPORTUNITYS, MY_OPPORTUNITYS } from "./listEnum";
 
-const mockOpportunity = [
-  {
-    id: 1,
-    idEmpresa: 1,
-    tituloVaga: "Programadora Node Js",
-    descricao: "Desenvolver novas features em Node Js",
-    requisitos: "Node, Front, Back, etc",
-    beneficios: "beneficios",
-    salario: 5000,
-    textoLivre: "texto livre",
-    localizacao: "São Paulo, SP",
-    status: "aberta",
-  },
-  {
-    id: 2,
-    idEmpresa: 2,
-    tituloVaga: "Programadora React",
-    descricao: "Executar manutenções e novas features em react",
-    requisitos: "Node, Front, Back, etc",
-    beneficios: "beneficios",
-    salario: 6000,
-    textoLivre: "texto livre",
-    localizacao: "São Paulo, SP",
-    status: "aberta",
-  },
-  {
-    id: 3,
-    idEmpresa: 3,
-    tituloVaga: "Programadora full stack",
-    descricao: "Desenvolver novas features em Node Js e React",
-    requisitos: "Node, Front, Back, etc",
-    beneficios: "beneficios",
-    salario: 8000,
-    textoLivre: "texto livre",
-    localizacao: "São Paulo, SP",
-    status: "aberta",
-  },
-];
+const ListOpportunity = ({ type }) => {
+  const [totalPages, setTotalPages] = useState(0);
+  const [pageCurrent, setPageCurrent] = useState(0);
+  const { request, loading } = useFetch();
+  const [arrayOpportunity, setArrayOpportunity] = useState([]);
+  const searchInput = useRef(null);
 
-const paginationBasic = () => {
-  let active = 2;
-  let items = [];
-  for (let number = 1; number <= 5; number++) {
-    items.push(
-      <Pagination.Item key={number} active={number === active}>
-        {number}
-      </Pagination.Item>,
+  async function getOpportunity() {
+    const { url, options } = GET_LIST_OPPORTUNITY(
+      pageCurrent,
+      searchInput.current.value
+    );
+    const { json, response } = await request(url, options);
+    if (response.ok) {
+      setArrayOpportunity(json.content);
+      setPageCurrent(json.pageable?.pageNumber);
+      setTotalPages(json.totalPages);
+    }
+  }
+
+  useEffect(() => {
+    getOpportunity();
+  }, [pageCurrent]);
+
+  async function handleSearchClick(event) {
+    await getOpportunity();
+  }
+
+  function renderLoading() {
+    return (
+      <div className="spinner-load">
+        <Spinner animation="border" />
+      </div>
     );
   }
-  return (
-    <div>
-      <Pagination size="sm">{items}</Pagination>
-    </div>
-  );
-};
 
-const ListOpportunity = () => {
-  const handlerCandidatar = (event) => {
-    setCandidatarCheck(!candidatarCheck);
+  function renderListOpportunity(typeSearch) {
+    if (arrayOpportunity && arrayOpportunity.length <= 0) {
+      return (
+        <p className="messageOps">
+          Ops... Não encontramos nenhuma vaga com esse nome.
+          <br /> :(
+          <br />
+          Tente novamente !
+        </p>
+      );
+    }
+
+    return (
+      arrayOpportunity &&
+      arrayOpportunity.map((opportunity) => {
+        if (typeSearch === MY_OPPORTUNITYS && !opportunity.isApplied) return;
+        return (
+          <CardDeck key={opportunity.id}>
+            <Card className="card">
+              <Card.Body>
+                <Card.Title className="title-card">
+                  {opportunity.name}
+                </Card.Title>
+                <Card.Text>
+                  <span className="titulo-campo">Localização:</span>{" "}
+                  <i class="fa fa-map-marker" aria-hidden="true"></i>{" "}
+                  {opportunity.location}
+                </Card.Text>
+                <Card.Text>
+                  <span className="titulo-campo">Requisitos:</span>{" "}
+                  {opportunity.requirements &&
+                    opportunity.requirements
+                      .map(
+                        (requirement) =>
+                          `${requirement.name} ${
+                            skillMap[requirement.knowledgeLevel]
+                          }`
+                      )
+                      .join(", ")}
+                </Card.Text>
+                <Card.Text>
+                  <span className="titulo-campo">Benefícios:</span>{" "}
+                  {opportunity.benefits}
+                </Card.Text>
+                <Card.Text>
+                  <span className="titulo-campo">Salário:</span>{" "}
+                  {currencyFormatter(opportunity.salary)}
+                </Card.Text>
+              </Card.Body>
+              <Link className="linkVaga" to={`/opportunity/${opportunity.id}`}>
+                <Button
+                  // onClick={handlerCandidatar}
+                  id={opportunity.isApplied ? "buttonGreen" : "buttonBlue"}
+                  className="buttonVaga"
+                  variant="primary"
+                  type="button"
+                >
+                  {opportunity.isApplied ? "Candidatada" : "Candidatar-se"}
+                </Button>
+              </Link>
+            </Card>
+          </CardDeck>
+        );
+      })
+    );
   }
 
-  const [candidatarCheck, setCandidatarCheck] = useState(false);
-
   return (
-    <Main>
-      <Container fluid="md" className="py-2">
-        {mockOpportunity &&
-          mockOpportunity.map((opportunity) => {
-            return (
-              <CardDeck key={opportunity.id}>
-                <Card className="card">
-                  <Card.Body>
-                    <Card.Title className="title-card">{opportunity.tituloVaga}</Card.Title>
-                    <Card.Text><span className="titulo-campo">Localização:</span> <i class="fa fa-map-marker" aria-hidden="true"></i> {opportunity.localizacao}</Card.Text>
-                    <Card.Text><span className="titulo-campo">Requisitos:</span> {opportunity.requisitos}</Card.Text>
-                    <Card.Text><span className="titulo-campo">Benefícios:</span> {opportunity.beneficios}</Card.Text>
-                    <Card.Text>
-                      <span className="titulo-campo">Salário:</span>{" "}
-                      {opportunity.salario.toLocaleString("pt-br", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
-                    </Card.Text>
-                  </Card.Body>
-                  <Link className="linkVaga" to={`/opportunity/${opportunity.id}`}>
-                    <Button id={candidatarCheck ? "buttonGreen" : "buttonBlue"} className="buttonVaga" variant="primary" type="button">
-                      {candidatarCheck ? "Candidatada" : "Candidatar-se"}
-                    </Button>
-                  </Link>
-                </Card>
-              </CardDeck>
-            );
-          })}
-        {paginationBasic()}
-      </Container>
-    </Main >
+    <>
+      <Form className="search" inline>
+        <FormControl
+          ref={searchInput}
+          type="text"
+          placeholder="Pesquisar"
+          className="form-control"
+        />
+        <Button className="btn-search ml-2" onClick={handleSearchClick}>
+          <i class="fa fa-search" aria-hidden="true"></i>
+        </Button>
+      </Form>
+      {loading ? renderLoading() : renderListOpportunity(type)}
+      <PaginationPage
+        pageCurrent={pageCurrent}
+        totalPages={totalPages}
+        setPageCurrent={setPageCurrent}
+      />
+    </>
   );
 };
 

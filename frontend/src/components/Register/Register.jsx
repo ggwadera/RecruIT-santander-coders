@@ -1,32 +1,36 @@
-import React from 'react';
-import { Form, Button, Spinner } from 'react-bootstrap';
-import { useHistory, Link } from 'react-router-dom';
-import Input from '../../components/Input/Input';
-import Checkbox from '../../components/Checkbox/Checkbox';
-import Error from '../../components/Helper/Error';
-import useForm from '../../Hooks/useForm';
-import useFetch from '../../Hooks/useFetch';
-import { USER_REGISTER } from '../../APIs/APIs';
-import './Register.css';
+import React from "react";
+import { Form, Button, Spinner } from "react-bootstrap";
+import { useHistory, Link } from "react-router-dom";
+import Input from "../../components/Input/Input";
+import Error from "../../components/Helper/Error";
+import useForm from "../../Hooks/useForm";
+import useFetch from "../../Hooks/useFetch";
+import { USER_REGISTER } from "../../APIs/userAPI";
+import "./Register.css";
 
 const UserRegister = () => {
   const nome = useForm();
-  const email = useForm('email');
+  const email = useForm("email");
   const senha = useForm();
   const confirmarSenha = useForm();
   const tipo = useForm();
-  const termo = useForm();
+  // const termo = useForm();
   const { loading, error, request } = useFetch();
   const history = useHistory();
 
   const optionsComboBox = [
-    {value: '', text: 'Escolha uma opção'},
-    {value: 'APPLICANT', text: 'Quero trabalhar'},
-    {value: 'COMPANY', text: 'Quero recrutar'},
+    { value: "", text: "Escolha uma opção" },
+    { value: "APPLICANT", text: "Quero trabalhar" },
+    { value: "COMPANY", text: "Quero recrutar" },
   ];
 
   async function registrar(nome, email, senha, tipo) {
-    const { url, options } = USER_REGISTER({ name: nome.value, email: email.value, password: senha.value, type: tipo.value });
+    const { url, options } = USER_REGISTER({
+      name: nome.value,
+      email: email.value,
+      password: senha.value,
+      type: tipo.value,
+    });
     return await request(url, options);
   }
 
@@ -42,7 +46,7 @@ const UserRegister = () => {
       senha.value === confirmarSenha.value
     ) {
       const { response } = await registrar(nome, email, senha, tipo);
-      if (response.ok) return history.push('/login');
+      if (response?.ok) return history.push("/login");
     }
   }
 
@@ -86,12 +90,6 @@ const UserRegister = () => {
             options={optionsComboBox}
             {...tipo}
           />
-          <Checkbox
-            className="CheckBoxMin"
-            type="checkbox"
-            required
-            label="Eu concordo com os termos de serviço e políticas de privacidade."
-          />
           {loading ? (
             <Button id="Cadastrar" variant="primary" disabled>
               <Spinner
@@ -104,16 +102,16 @@ const UserRegister = () => {
               <span className="sr-only">Carregando...</span>
             </Button>
           ) : (
-              <Button id="Cadastrar" variant="primary" type="submit">
-                Cadastrar
-              </Button>
-            )}
+            <Button id="Cadastrar" variant="primary" type="submit">
+              Cadastrar
+            </Button>
+          )}
           <Error error={error} />
           <p id="cadastro">
-            Já tem cadastro ?{' '}
+            Já tem cadastro ?{" "}
             <Link id="login" to="/login">
               Faça o Login
-          </Link>
+            </Link>
           </p>
         </Form>
       </div>
