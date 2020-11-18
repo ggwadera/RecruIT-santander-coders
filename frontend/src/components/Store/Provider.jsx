@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import Context from "./Context";
 import useStorage from "../../utils/useStorage";
 import jwt_decode from "jwt-decode";
-import logo from "../../assets/images/Logo2RecruIT.svg";
-import { GET_AVATAR } from "../../APIs/APIs";
+import logo from "../../assets/images/businesswoman.svg";
+import { GET_AVATAR } from "../../APIs/profileAPI";
 import useFetch from "../../Hooks/useFetch";
 
 const StoreProvider = ({ children }) => {
@@ -37,7 +37,7 @@ const StoreProvider = ({ children }) => {
         apptoken,
         setToken,
         user,
-        avatar,
+        avatar
       }}
     >
       {children}

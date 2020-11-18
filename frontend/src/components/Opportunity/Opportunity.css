@@ -35,7 +35,7 @@
 .buttonsCandidatar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
 }
 
 .titulo-campo-opportunity {
@@ -44,7 +44,7 @@
 
 .buttonSelect {
   display: flex;
-  margin: 5% 10%;
+  margin: 0% 0%;
   height: 100px;
   width: 100px;
   align-items: center;
@@ -99,11 +99,28 @@
   font-size: larger;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   transition: ease-out;
+  padding: 20px;
 }
 
 .sucess-apply-img {
   padding: 20px;
   height: 420px;
+}
+
+#load-opportunity {
+  height: 82vh;
+}
+
+#card-opportunity {
+  padding: 10px;
+}
+
+#container-opportunity {
+  padding: 0;
+}
+
+.linkToCompany {
+  color: var(--color-primary);
 }
 
 @media (min-width: 576px) {
@@ -115,5 +132,12 @@
   }
   .buttonSelect {
     margin: 2% 5%;
+  }
+  .buttonsCandidatar {
+    justify-content: center;
+  }
+
+  #card-opportunity {
+    padding: 20px;
   }
 }

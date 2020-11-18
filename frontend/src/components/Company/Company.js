@@ -6,7 +6,7 @@ import {
   Button,
   Form,
   FormControl,
-  Spinner,
+  Spinner
 } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import Main from "../../components/Template/main/Main";
@@ -38,6 +38,11 @@ const Company = () => {
   }
 
   useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth"
+    });
     getCompany();
   }, [pageCurrent]);
 
@@ -76,25 +81,35 @@ const Company = () => {
           <CardDeck key={index}>
             <Card>
               <Card.Body>
-                <Card.Title className="title-company-search">{company.name}</Card.Title>
+                <Card.Title className="title-company-search">
+                  {company.name}
+                </Card.Title>
                 <Card.Text>
                   <strong>Visão Geral:</strong> {company.about}
                 </Card.Text>
                 <Card.Text>
                   <strong>Localização:</strong>{" "}
-                  <i class="fa fa-map-marker" aria-hidden="true"></i>{" "}
+                  <i className="fa fa-map-marker" aria-hidden="true"></i>{" "}
                   {company.location}
                 </Card.Text>
                 <Card.Text>
-                  <strong>Ramo:</strong>
-                  {company.category}
+                  <strong>Ramo:</strong> {company.category}
                 </Card.Text>
                 <Card.Text>
-                  <strong>Site:</strong> {company.site}
+                  <strong>Site:</strong>{" "}
+                  <a className="link-perfil" href={company.site} target="blank">
+                    {company.site}
+                  </a>
                 </Card.Text>
                 <Card.Text>
-                  <strong>Linkedin:</strong>
-                  {company.linkedin}
+                  <strong>Linkedin:</strong>{" "}
+                  <a
+                    className="link-perfil"
+                    href={company.linkedin}
+                    target="blank"
+                  >
+                    {company.linkedin}
+                  </a>
                 </Card.Text>
               </Card.Body>
               <Button
@@ -122,7 +137,7 @@ const Company = () => {
             className=" form-control"
           />
           <Button className="btn-search ml-2" onClick={handleSearchClick}>
-            <i class="fa fa-search" aria-hidden="true"></i>
+            <i className="fa fa-search" aria-hidden="true"></i>
           </Button>
         </Form>
         {loading ? renderLoading() : renderCompanys()}

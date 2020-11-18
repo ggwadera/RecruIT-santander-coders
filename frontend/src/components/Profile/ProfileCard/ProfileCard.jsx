@@ -1,75 +1,209 @@
-import React, { useState } from 'react';
-import { Button, Card, Container, ListGroup } from 'react-bootstrap';
-import ModalForm from '../../Modal/ModalForm';
-import './ProfileCard.css';
+import React, { useEffect, useState } from "react";
+import { Button, Col, ListGroup, Row } from "react-bootstrap";
+import { useHistory } from "react-router-dom";
+import ModalForm from "../../Modal/ModalForm";
+import StyledCard from "../../StyledCard/StyledCard";
+import "./ProfileCard.css";
 
-const BaseCard = ({ title, titleChildren, children }) => {
-  return (
-    <Container fluid="md" className="py-2">
-      <Card className="card-profile">
-        <Card.Body className="p-2 p-md-3">
-          {title && (
-            <Card.Title className="d-flex justify-content-between align-items-center">
-              {title}
-              {titleChildren}
-            </Card.Title>
-          )}
-          {children}
-        </Card.Body>
-      </Card>
-    </Container>
-  );
+const checkHash = (hash, id) => hash && hash === id;
+
+const showHashModal = (hash, id, setShow) => {
+  if (checkHash(hash, id)) {
+    setShow(true);
+    document.getElementById(hash).scrollIntoView();
+  }
+};
+
+const replaceHash = (history) => {
+  if (history.location?.hash) history.replace(history.location.pathname);
 };
 
 const ProfileCard = ({ title, canEdit, handleClick, children }) => {
-  const editIcon = (
+  const renderIcon = () => (
     <button className="btn-profile-edit" onClick={handleClick} title="Editar">
       <i className="far fa-edit"></i>
     </button>
   );
   return (
-    <BaseCard title={title} titleChildren={canEdit && editIcon}>
+    <StyledCard className="card-profile">
+      <StyledCard.Title title={title}>
+        {canEdit && renderIcon()}
+      </StyledCard.Title>
       {children}
-    </BaseCard>
+    </StyledCard>
   );
 };
 
-const List = ({
+const Item = ({ title, value, formatter }) => {
+  return (
+    <Row className="profile-item">
+      <Col sm={12} md="auto">
+        <span className="font-weight-bold">{title}</span>
+      </Col>
+      <Col sm={12} md>
+        {formatter ? formatter(value) : value}
+      </Col>
+    </Row>
+  );
+};
+ProfileCard.Item = Item;
+
+const Info = ({
+  id,
   title,
   schema,
   canEdit,
-  onAdd,
-  onEdit,
-  onRemove,
-  items,
-  formatter,
+  onSubmit,
+  preSubmit,
+  data,
+  setData
 }) => {
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const history = useHistory();
+
+  const handleError = (error) => {
+    if (error?.msg === "Validation Errors") {
+      setError(
+        error.errors.reduce(
+          (acc, e) =>
+            `${acc}${schema[e.fieldName.split(".").pop()]?.label} ${e.message}`,
+          ""
+        )
+      );
+    } else {
+      setError(error.msg);
+    }
+  };
+
+  const handleSubmit = async (body) => {
+    if (preSubmit) preSubmit(body);
+    const { response, json } = await onSubmit(body);
+    if (response.ok) {
+      setData({ ...body });
+      replaceHash(history);
+    } else {
+      handleError(json);
+    }
+  };
+
+  const onHide = () => {
+    setShowModal(false);
+    setError(undefined);
+  };
+
+  const renderModal = () => {
+    return (
+      <ModalForm
+        show={showModal}
+        onHide={onHide}
+        onSubmit={handleSubmit}
+        schema={schema}
+        title="Editar informações"
+        values={data}
+        error={error}
+      />
+    );
+  };
+
+  const renderIcon = () => (
+    <button
+      className="btn-profile-edit"
+      onClick={() => setShowModal(true)}
+      title="Editar"
+    >
+      <i className="far fa-edit"></i>
+    </button>
+  );
+
+  useEffect(() => {
+    const hash = history.location?.hash.substring(1);
+    if (showModal && !hash) onHide();
+    showHashModal(hash, id, setShowModal);
+  }, [data]);
+
+  return (
+    <StyledCard className="card-profile" id={id}>
+      <StyledCard.Title title={title}>
+        {canEdit && renderIcon()}
+      </StyledCard.Title>
+      {Object.entries(schema).map(([k, v]) => (
+        <ProfileCard.Item
+          key={k}
+          title={v.label}
+          value={data[k]}
+          formatter={v.formatter}
+        />
+      ))}
+      {canEdit && renderModal()}
+    </StyledCard>
+  );
+};
+ProfileCard.Info = Info;
+
+const List = ({
+  id,
+  title,
+  schema,
+  canEdit,
+  onSubmit,
+  preSubmit,
+  items,
+  setItems,
+  formatter
+}) => {
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editIndex, setEditIndex] = useState(undefined);
+  const history = useHistory();
+
+  const handleError = (error) => {
+    if (error?.msg === "Validation Errors") {
+      setError(
+        error.errors.reduce(
+          (acc, e) =>
+            `${acc}${schema[e.fieldName.split(".").pop()]?.label} ${e.message}`,
+          ""
+        )
+      );
+    } else {
+      setError(error.msg);
+    }
+  };
+
+  const handleSubmit = async (item) => {
+    if (preSubmit) preSubmit(item);
+    if (editIndex >= 0) items[editIndex] = item;
+    else items.push(item);
+    const { response, json } = await onSubmit(items);
+    if (response.ok) {
+      setItems([...items]);
+      if (history.location?.hash) history.replace(history.location.pathname);
+    } else {
+      handleError(json);
+    }
+  };
+
+  const handleRemove = async (i) => {
+    if (!window.confirm("Deseja realmente apagar este item?")) return;
+    items.splice(i, 1);
+    const { response } = await onSubmit(items);
+    if (response.ok) setItems([...items]);
+  };
 
   const handleShowEdit = (i) => {
     setEditIndex(i);
     setShowModal(true);
   };
 
-  const handleSubmit = async (item) => {
-    try {
-      if (editIndex >= 0) await onEdit(item, editIndex);
-      else await onAdd(item);
-      setShowModal(false);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (editIndex) setEditIndex(undefined);
-    }
-  };
-
   const onHide = () => {
-    if (editIndex) setEditIndex(undefined);
+    if (editIndex >= 0) setEditIndex(undefined);
     setShowModal(false);
+    setError(undefined);
+    replaceHash(history);
   };
 
-  const addButton = (
+  const renderAddButton = () => (
     <Button
       variant="outline-primary"
       className="btn-profile-add"
@@ -80,8 +214,31 @@ const List = ({
     </Button>
   );
 
+  const renderModal = () => {
+    return (
+      <ModalForm
+        show={showModal}
+        onHide={onHide}
+        onSubmit={handleSubmit}
+        schema={schema}
+        title={editIndex ? "Editar item" : "Adicionar item"}
+        values={editIndex >= 0 ? items[editIndex] : undefined}
+        error={error}
+      />
+    );
+  };
+
+  useEffect(() => {
+    const hash = history.location?.hash.substring(1);
+    if (showModal && !hash) onHide();
+    showHashModal(hash, id, setShowModal);
+  }, [items]);
+
   return (
-    <BaseCard title={title} titleChildren={canEdit && addButton}>
+    <StyledCard className="card-profile" id={id}>
+      <StyledCard.Title title={title}>
+        {canEdit && renderAddButton()}
+      </StyledCard.Title>
       <ListGroup variant="flush" className="px-0">
         {items.map((e, i) => (
           <ListGroup.Item
@@ -102,7 +259,7 @@ const List = ({
                 <Button
                   variant="outline-danger"
                   className="btn-profile-remove"
-                  onClick={() => onRemove(i)}
+                  onClick={() => handleRemove(i)}
                   title="Remover item"
                 >
                   <i className="far fa-trash-alt"></i>
@@ -112,15 +269,8 @@ const List = ({
           </ListGroup.Item>
         ))}
       </ListGroup>
-      <ModalForm
-        show={showModal}
-        onHide={onHide}
-        onSubmit={handleSubmit}
-        schema={schema}
-        title={editIndex ? 'Editar item' : 'Adicionar item'}
-        values={editIndex >= 0 ? items[editIndex] : undefined}
-      />
-    </BaseCard>
+      {canEdit && renderModal()}
+    </StyledCard>
   );
 };
 ProfileCard.List = List;
