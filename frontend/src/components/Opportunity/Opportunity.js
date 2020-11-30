@@ -4,12 +4,21 @@ import { useHistory, Link } from "react-router-dom";
 import StoreContext from "../../components/Store/Context";
 import Main from "../Template/main/Main";
 import useFetch from "../../Hooks/useFetch";
-import { GET_OPPORTUNITY, POST_APPLY } from "../../APIs/APIs";
+import {
+  GET_OPPORTUNITY,
+  POST_APPLY,
+  GET_APPLICANTS_OPPORTUNITY
+} from "../../APIs/APIs";
 import heart from "../../assets/images/Heart.svg";
 import heartFill from "../../assets/images/FilledHeart.svg";
+import editSVG from "../../assets/images/opportunity/editar.svg";
 import back from "../../assets/images/back.svg";
 import SucessApplySVG from "../../assets/images/opportunity/sucessApply.svg";
 import ConfirmationSVG from "../../assets/images/opportunity/confirmation.svg";
+import SimpleImage from "../../assets/images/businesswoman-blue.svg";
+import LinkedinLogo from "../../assets/images/linkedin-applicants.svg";
+import GithubLogo from "../../assets/images/github-applicants.svg";
+import WhatsappLogo from "../../assets/images/whats-applicants.svg";
 
 import "./Opportunity.css";
 import { currencyFormatter } from "../../utils/formatters";
@@ -24,6 +33,7 @@ const ListOpportunity = ({ id }) => {
   const [heartCheck, setHeartCheck] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [typeMessage, setTypeMessage] = useState(false);
+  const [applicants, setApplicants] = useState([]);
 
   useEffect(() => {
     window.scrollTo({
@@ -42,7 +52,16 @@ const ListOpportunity = ({ id }) => {
       }
     }
 
+    async function getApplicantsOpportunity() {
+      const { url, options } = GET_APPLICANTS_OPPORTUNITY(id);
+      const { json, response } = await request(url, options);
+      if (response.ok) {
+        setApplicants(json);
+      }
+    }
+
     getOpportunity();
+    getApplicantsOpportunity();
   }, [request]);
 
   function renderLoading() {
@@ -79,6 +98,26 @@ const ListOpportunity = ({ id }) => {
 
   function onHideModal() {
     setModalOpen(false);
+  }
+
+  function renderEdit() {
+    if (user.pid !== opportunity.companyId) return;
+    return (
+      <Link
+        className="buttonSelect buttonYes"
+        to={{
+          pathname: `/addOpportunity/`,
+          state: {
+            action: "edit",
+            idOpportunity: opportunity.id
+          }
+        }}
+      >
+        <button className="buttonRemove">
+          <img className="heartIco" src={editSVG} alt="Candidatar" />
+        </button>
+      </Link>
+    );
   }
 
   const linkCompany = `/profile/company/${opportunity.companyId}`;
@@ -130,6 +169,7 @@ const ListOpportunity = ({ id }) => {
               </span>
               <Card.Text>{opportunity.text}</Card.Text>
             </Card.Body>
+            {user.pid === opportunity.companyId && renderApplicants()}
           </Card>
         </CardDeck>
         <div className="buttonsCandidatar">
@@ -139,7 +179,7 @@ const ListOpportunity = ({ id }) => {
           >
             <img className="xIco" src={back} alt="Retornar" />
           </button>
-          {user.type === "applicant" && (
+          {user.type === "applicant" ? (
             <button
               onClick={handlerHeartClick}
               className="buttonSelect buttonYes"
@@ -154,6 +194,8 @@ const ListOpportunity = ({ id }) => {
                 />
               )}
             </button>
+          ) : (
+            renderEdit()
           )}
         </div>
         <Modal
@@ -194,6 +236,86 @@ const ListOpportunity = ({ id }) => {
           )}
         </Modal>
       </Container>
+    );
+  }
+
+  function renderApplicants() {
+    return (
+      <Container id="container-opportunity">
+        <h2 className="applicants-opportunity">Candidatas inscritas</h2>
+        <CardDeck className="deck-opportunity">
+          {renderApplicantCard()}
+        </CardDeck>
+      </Container>
+    );
+  }
+
+  function renderApplicantCard() {
+    return (
+      applicants &&
+      applicants.map((applicant) => {
+        const url = `https://api.whatsapp.com/send?phone=55${applicant.phoneNumber}&text=Ol%C3%A1%2C%20tudo%20bem%20%3F%20Encontrei%20seu%20perfil%20no%20RecruIT.%20Podemos%20conversar%20%3F`;
+        const urlPerfil = `/profile/applicant/${applicant.id}`;
+        return (
+          <div key={applicant.id}>
+            <Card className="cardApplicants">
+              <div>
+                <div className="imgApplicants">
+                  <Link to={urlPerfil}>
+                    <img
+                      className="srcApplicants"
+                      src={applicant.imgSrc || SimpleImage}
+                      alt="Foto do perfil"
+                    ></img>
+                  </Link>
+                </div>
+                <div className="informationApplicants">
+                  <h6 className="nameApplicants">{applicant.name}</h6>
+                  <p className="descriptionApplicants">{applicant.location}</p>
+                  <div className="divButtonApplicants">
+                    <a
+                      href={applicant.phoneNumber && url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footerLink"
+                    >
+                      <img
+                        className="logoFooterPng"
+                        src={WhatsappLogo}
+                        alt="WhatsApp"
+                      />
+                    </a>
+                    <a
+                      href={applicant.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footerLink"
+                    >
+                      <img
+                        className="logoFooterPng"
+                        src={LinkedinLogo}
+                        alt="LinkedIn"
+                      />
+                    </a>
+                    <a
+                      href={applicant.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footerLink"
+                    >
+                      <img
+                        className="logoFooterPng"
+                        src={GithubLogo}
+                        alt="GitHub"
+                      />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        );
+      })
     );
   }
 

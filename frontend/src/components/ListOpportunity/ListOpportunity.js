@@ -12,10 +12,11 @@ import PaginationPage from "../Pagination/Pagination";
 import { GET_LIST_OPPORTUNITY, GET_MY_OPPORTUNITY } from "../../APIs/APIs";
 import { Link } from "react-router-dom";
 import StoreContext from "../../components/Store/Context";
-import "./ListOpportunity.css";
 import { currencyFormatter } from "../../utils/formatters";
 import { skillMap } from "../../utils/skills";
 import { MY_OPPORTUNITYS } from "./listEnum";
+
+import "./ListOpportunity.css";
 
 const ListOpportunity = ({ type }) => {
   const [totalPages, setTotalPages] = useState(0);
@@ -63,7 +64,8 @@ const ListOpportunity = ({ type }) => {
   }, [pageCurrent]);
 
   async function handleSearchClick(event) {
-    await getOpportunity();
+    if (pageCurrent !== 0) setPageCurrent(0);
+    else await getOpportunity();
   }
 
   function renderLoading() {
@@ -91,10 +93,9 @@ const ListOpportunity = ({ type }) => {
       arrayOpportunity.map((opportunity) => {
         if (typeSearch === MY_OPPORTUNITYS && !opportunity.isApplied)
           return null;
-
         return (
           <div key={opportunity.id}>
-            <Card className="card">
+            <Card className="card h-100">
               <Card.Body>
                 <Card.Title className="title-card">
                   {opportunity.name}
@@ -129,15 +130,33 @@ const ListOpportunity = ({ type }) => {
                 </Card.Text>
               </Card.Body>
               <Link className="linkVaga" to={`/opportunity/${opportunity.id}`}>
-                <Button
-                  // onClick={handlerCandidatar}
-                  id={opportunity.isApplied ? "buttonGreen" : "buttonBlue"}
-                  className="buttonVaga"
-                  variant="primary"
-                  type="button"
-                >
-                  {opportunity.isApplied ? "Candidatada" : "Candidatar-se"}
-                </Button>
+                {user?.type === "applicant" ? (
+                  <Button
+                    // onClick={handlerCandidatar}
+                    id={opportunity.isApplied ? "buttonGreen" : "buttonBlue"}
+                    className="buttonVaga"
+                    variant="primary"
+                    type="button"
+                  >
+                    {opportunity.isApplied ? "Candidatada" : "Ver Oportunidade"}
+                  </Button>
+                ) : (
+                  <Button
+                    // onClick={handlerCandidatar}
+                    id={
+                      user.pid === opportunity.companyId
+                        ? "buttonGreen"
+                        : "buttonBlue"
+                    }
+                    className="buttonVaga"
+                    variant="primary"
+                    type="button"
+                  >
+                    {user.pid === opportunity.companyId
+                      ? "Ver Minha Vaga"
+                      : "Ver Oportunidade"}
+                  </Button>
+                )}
               </Link>
             </Card>
           </div>
@@ -153,7 +172,7 @@ const ListOpportunity = ({ type }) => {
           ref={searchInput}
           type="text"
           placeholder="Pesquisar"
-          className="form-control"
+          className=" form-search"
         />
         <Button className="btn-search ml-2" onClick={handleSearchClick}>
           <i className="fa fa-search" aria-hidden="true"></i>

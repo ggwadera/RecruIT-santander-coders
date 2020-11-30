@@ -38,8 +38,6 @@ const Applicant = () => {
     }
   }
 
-  console.log(applicants);
-
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -54,7 +52,8 @@ const Applicant = () => {
   }
 
   async function handleSearchClick(event) {
-    await getCompany();
+    if (pageCurrent !== 0) setPageCurrent(0);
+    else await getCompany();
   }
 
   function renderLoading() {
@@ -85,11 +84,12 @@ const Applicant = () => {
             <Card>
               <Card.Body>
                 <div className="container-card-perfil">
-                  {(applicant.imgSrc == null) | (applicant.imgSrc == "") ? (
-                    <img src={womanLogo} />
-                  ) : (
-                    <img src={applicant.imgSrc} />
-                  )}
+                  <div className="image-applicant">
+                    <img
+                      src={applicant.imgSrc || womanLogo}
+                      alt="Foto do perfil"
+                    />
+                  </div>
                   <Card.Title className="title-applicant-search">
                     {applicant.name}
                   </Card.Title>
@@ -151,7 +151,7 @@ const Applicant = () => {
             ref={searchInput}
             type="text"
             placeholder="Pesquisar"
-            className=" form-control"
+            className=" form-search"
           />
           <Button className="btn-search ml-2" onClick={handleSearchClick}>
             <i className="fa fa-search" aria-hidden="true"></i>

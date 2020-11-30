@@ -12,7 +12,7 @@
   margin: 5px;
 }
 
-.form-control {
+.form-search {
   display: flex;
   margin-top: 15px;
   margin-bottom: 25px;
@@ -96,18 +96,27 @@
   margin-bottom: 20px;
 }
 
-.container-card-perfil > img {
-  width: 80px;
+.image-applicant {
+  width: 90px;
+  height: 90px;
+}
+
+.container-card-perfil > .image-applicant > img {
   border-radius: 50%;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  border: 4px double var(--color-primary-dark);
 }
 
 .title-applicant-search {
   font-size: 28px;
   text-align: left;
   font-weight: bold;
+  margin-top: 10px;
   margin-bottom: 15px;
-  align-self: center;
   margin-left: 10px;
+  align-self: center;
 }
 
 .link-perfil {
@@ -139,7 +148,7 @@
     border: none;
   }
 
-  .form-control {
+  .form-search {
     display: inline-block;
     width: 200px;
     margin-top: 25px;
